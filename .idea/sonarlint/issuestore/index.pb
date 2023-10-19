@@ -7,8 +7,6 @@ k
 Papp/src/main/java/com/android/myaudioplayer/presentation/screens/AlbumsScreen.kt,1\e\1e5194420a2f2fd6a0703d26085440c6fe7f35f8
 @
 app/build.gradle,f\4\f4a01d6a4fcb971362ec00a83903fd3902f52164
-ƒ
-Sapp/src/main/java/com/android/myaudioplayer/presentation/screens/MusicListScreen.kt,d\d\dd0308be252764e01bce479fd7bb56e661d1aa38
 „
 Tapp/src/main/java/com/android/myaudioplayer/presentation/navigation/SetUpNavGraph.kt,b\7\b75a60e695b3e3e6e8dbc2e2c14f1338a22eb8ba
 ~
@@ -31,3 +29,13 @@ m
 =app/src/main/java/com/android/myaudioplayer/ui/theme/Theme.kt,a\9\a9dd37be3d352853202045ac31d5d344ac2fea6b
 s
 Capp/src/main/java/com/android/myaudioplayer/MediaPlayerViewModel.kt,5\e\5edbb62b595feebb1e5f1438221ad05d4b8cbeb0
+X
+(gradle/wrapper/gradle-wrapper.properties,f\b\fbe448ebfc3eb2d4e308f6b8b043666f5b57235e
+†
+Vapp/src/main/java/com/android/myaudioplayer/presentation/components/GetImagePainter.kt,1\2\1222e30cd66b5f9ce4e5b22bb208f8757b1b0d63
+ƒ
+Sapp/src/main/java/com/android/myaudioplayer/presentation/components/CustomTopBar.kt,2\5\25892aff979328ca55a05a0c6181057563d1ab3f
+P
+ app/src/main/AndroidManifest.xml,8\c\8c55c3ccc257e5907959013f99656e4c8ec3903e
+r
+Bapp/src/main/java/com/android/myaudioplayer/AudioPlayerActivity.kt,b\0\b0e8910058dac9c7f23bdf2e2efd6d27fa702901

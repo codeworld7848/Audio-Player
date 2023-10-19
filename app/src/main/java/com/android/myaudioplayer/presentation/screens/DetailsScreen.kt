@@ -1,8 +1,6 @@
 package com.android.myaudioplayer.presentation.screens
 
-import android.media.MediaPlayer
-import android.util.Log
-import android.widget.Toast
+import android.app.Activity
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -23,87 +21,106 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Slider
 import androidx.compose.material.SliderDefaults
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.android.myaudioplayer.MediaPlayerViewModel
+import com.android.myaudioplayer.MainActivity
 import com.android.myaudioplayer.R
 import com.android.myaudioplayer.presentation.components.getImagePainter
-import kotlinx.coroutines.delay
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.unit.lerp
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.calculateCurrentOffsetForPage
 import com.google.accompanist.pager.rememberPagerState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalPagerApi::class, ExperimentalStdlibApi::class)
 @Composable
-fun MusicDetailsScreen(mediaPlayerViewModel: MediaPlayerViewModel) {
+fun MusicDetailsScreen() {
     val context = LocalContext.current
+    val mediaService = (context as Activity as MainActivity)
+    val mediaPlayerService = mediaService.mediaPlayerService!!
     // Display current position and total duration
-    val currentPosition = mediaPlayerViewModel.getCurrentPosition()
-    val duration = mediaPlayerViewModel.getDuration()
+    val currentPosition = mediaPlayerService.getCurrentPosition()
+    val duration = mediaPlayerService.getDuration()
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(
-        pageCount = mediaPlayerViewModel.audioList.value.size,
-        initialPage = mediaPlayerViewModel.currentMusicPosition.value
+        pageCount = mediaPlayerService.audioList.value.size,
+        initialPage = mediaPlayerService.currentMusicPosition.value
     )
     LaunchedEffect(key1 = pagerState.currentPage) {
-        if (mediaPlayerViewModel.currentMusicPosition.value != pagerState.currentPage) {
-            mediaPlayerViewModel.currentMusicPosition.value = pagerState.currentPage
-            mediaPlayerViewModel.isPlaying.value = false
-            mediaPlayerViewModel.manuallyPaused.value = false
-            mediaPlayerViewModel.selectedAudioFile?.value =
-                mediaPlayerViewModel.audioList.value[pagerState.currentPage]
+        if (mediaPlayerService.currentMusicPosition.value != pagerState.currentPage) {
+            mediaPlayerService.currentMusicPosition.value = pagerState.currentPage
+            mediaPlayerService.isPlaying.value = false
+            mediaPlayerService.manuallyPaused.value = false
+            mediaPlayerService.selectedAudioFile?.value =
+                mediaPlayerService.audioList.value[pagerState.currentPage]
         }
     }
-    val selectedSong = mediaPlayerViewModel.selectedAudioFile?.value
-    LaunchedEffect(key1 = mediaPlayerViewModel.selectedAudioFile?.value) {
-        if (!mediaPlayerViewModel.isPlaying.value && !mediaPlayerViewModel.manuallyPaused.value) {
-//            delay(1000)
-            if (mediaPlayerViewModel.mediaPlayer != null) {
-                mediaPlayerViewModel.mediaPlayer?.let {
+    val selectedSong = mediaPlayerService.selectedAudioFile?.value
+    /*LaunchedEffect(key1 = mediaPlayerService.selectedAudioFile?.value) {
+        if (!mediaPlayerService.isPlaying.value && !mediaPlayerService.manuallyPaused.value) {
+            //            delay(1000)
+            if (mediaPlayerService.mediaPlayer != null) {
+                mediaPlayerService.mediaPlayer?.let {
                     it.stop()
                     it.release()
                     selectedSong?.uri?.let { uri ->
-                        mediaPlayerViewModel.mediaPlayer = MediaPlayer.create(context, uri)
-                        mediaPlayerViewModel.playMusic()
+                        mediaPlayerService.mediaPlayer = MediaPlayer.create(context, uri)
+                        mediaPlayerService.playMusic()
                     }
                 }
             } else {
                 selectedSong?.uri?.let { uri ->
-                    mediaPlayerViewModel.mediaPlayer = MediaPlayer.create(context, uri)
-                    mediaPlayerViewModel.playMusic()
+                    mediaPlayerService.mediaPlayer = MediaPlayer.create(context, uri)
+                    mediaPlayerService.playMusic()
+                }
+            }
+        }
+    }*/
+    LaunchedEffect(key1 = mediaPlayerService.selectedAudioFile?.value) {
+        if (!mediaPlayerService.isPlaying.value && !mediaPlayerService.manuallyPaused.value) {
+            if (mediaPlayerService.mPlayer != null) {
+                mediaPlayerService.stopPlaying()
+                mediaPlayerService.selectedAudioFile?.value?.let {
+                    mediaPlayerService.setMediaUri(it.uri)
+                    mediaPlayerService.play()
+                }
+            } else {
+                mediaPlayerService.selectedAudioFile?.value?.let {
+                    mediaPlayerService.setMediaUri(it.uri)
+                    mediaPlayerService.play()
                 }
             }
         }
     }
+
     // Observe playback progress and update the slider
-    LaunchedEffect(mediaPlayerViewModel) {
+    LaunchedEffect(mediaPlayerService) {
         while (true) {
-            mediaPlayerViewModel.updateProgress(){
+            mediaPlayerService.updateProgress() {
                 scope.launch {
-                    pagerState.animateScrollToPage(pagerState.currentPage+1,
+                    pagerState.animateScrollToPage(
+                        pagerState.currentPage + 1,
                         animationSpec = tween(2000)
                     )
                 }
@@ -111,8 +128,7 @@ fun MusicDetailsScreen(mediaPlayerViewModel: MediaPlayerViewModel) {
             delay(1000) // Update progress every second (adjust as needed)
         }
     }
-    val audioDuration = mediaPlayerViewModel.mediaPlayer?.duration?.div(1000)
-    Log.d("AudioDuration", audioDuration.toString())
+    val audioDuration = mediaPlayerService.mPlayer?.duration?.div(1000)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -179,9 +195,9 @@ fun MusicDetailsScreen(mediaPlayerViewModel: MediaPlayerViewModel) {
                         }
                     ) {
                         Image(
-                            painter = if (mediaPlayerViewModel.audioList.value[page].albumData != null) getImagePainter(
+                            painter = if (mediaPlayerService.audioList.value[page].albumData != null) getImagePainter(
                                 context = context,
-                                bitMap = mediaPlayerViewModel.audioList.value[page].albumData
+                                bitMap = mediaPlayerService.audioList.value[page].albumData
                             ) else {
                                 painterResource(id = R.drawable.music)
                             },
@@ -225,16 +241,16 @@ fun MusicDetailsScreen(mediaPlayerViewModel: MediaPlayerViewModel) {
                     )
                 }
                 Slider(
-                    value = mediaPlayerViewModel.progress.value,
+                    value = mediaPlayerService.progress.value,
                     onValueChange = { newValue ->
-                        mediaPlayerViewModel.pauseMusic()
+                        mediaPlayerService.pause()
                         val newPosition =
-                            (newValue * mediaPlayerViewModel.mediaPlayer?.duration?.toFloat()!!).toInt()
-                        mediaPlayerViewModel.seekToPosition(newPosition)
+                            (newValue * mediaPlayerService.mPlayer?.duration?.toFloat()!!).toInt()
+                        mediaPlayerService.seekToPosition(newPosition)
                     },
                     onValueChangeFinished = {
-                        if (!mediaPlayerViewModel.manuallyPaused.value) {
-                            mediaPlayerViewModel.playMusic()
+                        if (!mediaPlayerService.manuallyPaused.value) {
+                            mediaPlayerService.play()
                         }
                     },
                     valueRange = 0f..1f,
@@ -259,7 +275,7 @@ fun MusicDetailsScreen(mediaPlayerViewModel: MediaPlayerViewModel) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = {
                         scope.launch {
-                            if (pagerState.currentPage in 1..mediaPlayerViewModel.audioList.value.size) {
+                            if (pagerState.currentPage in 1..mediaPlayerService.audioList.value.size) {
                                 pagerState.animateScrollToPage(pagerState.currentPage - 1)
                             }
                         }
@@ -273,16 +289,16 @@ fun MusicDetailsScreen(mediaPlayerViewModel: MediaPlayerViewModel) {
                     }
                     Spacer(modifier = Modifier.width(50.dp))
                     IconButton(onClick = {
-                        if (mediaPlayerViewModel.mediaPlayer?.isPlaying == true) {
-                            mediaPlayerViewModel.manuallyPaused.value = true
-                            mediaPlayerViewModel.pauseMusic()
+                        if (mediaPlayerService.mPlayer?.isPlaying == true) {
+                            mediaPlayerService.manuallyPaused.value = true
+                            mediaPlayerService.pause()
                         } else {
-                            mediaPlayerViewModel.playMusic()
+                            mediaPlayerService.play()
                         }
                     }) {
                         Icon(
                             painter = painterResource(
-                                id = if (mediaPlayerViewModel.isPlaying.value) {
+                                id = if (mediaPlayerService.isPlaying.value && !mediaPlayerService.manuallyPaused.value) {
                                     R.drawable.pause
                                 } else R.drawable.play_button
                             ),
@@ -294,7 +310,7 @@ fun MusicDetailsScreen(mediaPlayerViewModel: MediaPlayerViewModel) {
                     Spacer(modifier = Modifier.width(50.dp))
                     IconButton(onClick = {
                         scope.launch {
-                            if (pagerState.currentPage in 0..<mediaPlayerViewModel.audioList.value.size - 1) {
+                            if (pagerState.currentPage in 0..<mediaPlayerService.audioList.value.size - 1) {
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
                             }
                         }
@@ -312,18 +328,3 @@ fun MusicDetailsScreen(mediaPlayerViewModel: MediaPlayerViewModel) {
     }
 }
 
-fun playNextMusic(mediaPlayerViewModel: MediaPlayerViewModel) {
-    mediaPlayerViewModel.isPlaying.value = false
-    mediaPlayerViewModel.manuallyPaused.value = false
-    mediaPlayerViewModel.currentMusicPosition.value += 1
-    mediaPlayerViewModel.selectedAudioFile?.value =
-        mediaPlayerViewModel.audioList.value[mediaPlayerViewModel.currentMusicPosition.value]
-}
-
-fun playPreviousMusic(mediaPlayerViewModel: MediaPlayerViewModel) {
-    mediaPlayerViewModel.isPlaying.value = false
-    mediaPlayerViewModel.manuallyPaused.value = false
-    mediaPlayerViewModel.currentMusicPosition.value -= 1
-    mediaPlayerViewModel.selectedAudioFile?.value =
-        mediaPlayerViewModel.audioList.value[mediaPlayerViewModel.currentMusicPosition.value]
-}

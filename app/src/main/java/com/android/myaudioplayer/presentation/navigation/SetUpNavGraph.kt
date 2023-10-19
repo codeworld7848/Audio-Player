@@ -13,6 +13,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import com.android.myaudioplayer.MediaPlayerViewModel
+import com.android.myaudioplayer.presentation.Constants
 import com.android.myaudioplayer.presentation.screens.HomeScreen
 import com.android.myaudioplayer.presentation.screens.MusicDetailsScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -27,7 +28,7 @@ fun SetUpNavGraph(
 ) {
     AnimatedNavHost(
         navController = navController,
-        startDestination = Destinations.HOME_SCREEN_ROUTE
+        startDestination = Constants.Destination
     ) {
         composable(
             route = Destinations.HOME_SCREEN_ROUTE,
@@ -58,7 +59,7 @@ fun SetUpNavGraph(
                 ) + fadeIn(animationSpec = tween(1000))
             }
         ) {
-            MusicDetailsScreen(mediaPlayerViewModel)
+            MusicDetailsScreen()
         }
     }
 }

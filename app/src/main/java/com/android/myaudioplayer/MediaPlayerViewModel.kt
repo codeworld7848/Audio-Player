@@ -6,13 +6,10 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.myaudioplayer.presentation.components.getAlbumArt
 import com.android.myaudioplayer.presentation.screens.AudioData
-import com.android.myaudioplayer.presentation.screens.playNextMusic
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MediaPlayerViewModel : ViewModel() {
@@ -20,7 +17,7 @@ class MediaPlayerViewModel : ViewModel() {
     var manuallyPaused = mutableStateOf(false)
     var isPlaying = mutableStateOf(false)
     var progress = mutableStateOf(0f)
-    var tempList: ArrayList<AudioData> = arrayListOf()
+    private var tempList: ArrayList<AudioData> = arrayListOf()
     var audioList: MutableState<List<AudioData>> = mutableStateOf(emptyList())
     var selectedAudioFile: MutableState<AudioData?>? = mutableStateOf(null)
     var currentMusicPosition: MutableState<Int> = mutableStateOf(-1)

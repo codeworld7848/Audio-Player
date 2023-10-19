@@ -1,7 +1,8 @@
 package com.android.myaudioplayer.presentation.screens
 
 import android.annotation.SuppressLint
-import android.media.MediaPlayer
+import android.app.Activity
+import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,9 +20,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.IconButton
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,10 +28,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,7 +38,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.android.myaudioplayer.MediaPlayerViewModel
+import com.android.myaudioplayer.MainActivity
+import com.android.myaudioplayer.MediaPlayerService
 import com.android.myaudioplayer.R
 import com.android.myaudioplayer.presentation.components.MusicItem
 import com.android.myaudioplayer.presentation.components.getImagePainter
@@ -56,36 +50,31 @@ import kotlinx.coroutines.delay
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun SongsScreen(
-    navController: NavController,
-    mediaPlayerViewModel: MediaPlayerViewModel
+    navController: NavController
 ) {
     val context = LocalContext.current
-    val itemClicked = rememberSaveable {
-        mutableStateOf(false)
-    }
-    LaunchedEffect(key1 = mediaPlayerViewModel.selectedAudioFile?.value) {
-        if (!mediaPlayerViewModel.isPlaying.value && !mediaPlayerViewModel.manuallyPaused.value) {
-            if (mediaPlayerViewModel.mediaPlayer != null) {
-                mediaPlayerViewModel.mediaPlayer?.let {
-                    it.stop()
-                    it.release()
-                    mediaPlayerViewModel.selectedAudioFile?.value?.uri?.let { uri ->
-                        mediaPlayerViewModel.mediaPlayer = MediaPlayer.create(context, uri)
-                        mediaPlayerViewModel.playMusic()
-                    }
+    val mediaService = (context as Activity as MainActivity)
+    val mediaPlayerService = mediaService.mediaPlayerService!!
+    LaunchedEffect(key1 = mediaPlayerService.selectedAudioFile?.value) {
+        mediaPlayerService.selectedAudioFile?.value?.let { audioData ->
+            if (!mediaPlayerService.isPlaying.value && !mediaPlayerService.manuallyPaused.value) {
+                if (mediaPlayerService.mPlayer != null) {
+                    mediaPlayerService.stopPlaying()
                 }
-            } else {
-                mediaPlayerViewModel.selectedAudioFile?.value?.uri?.let { uri ->
-                    mediaPlayerViewModel.mediaPlayer = MediaPlayer.create(context, uri)
-                    mediaPlayerViewModel.playMusic()
-                }
+                val intent = Intent(context, MediaPlayerService::class.java)
+                intent.action="ACTION_PLAY"
+                intent.data = audioData.uri
+                intent.putExtra("albumImage",audioData.albumData.toString())
+                (context as Activity).startService(intent)
+//                mediaPlayerService.setMediaUri(audioData.uri)
+//                mediaPlayerService.play()
             }
         }
     }
     // Observe playback progress and update the slider
-    LaunchedEffect(mediaPlayerViewModel) {
+    LaunchedEffect(mediaPlayerService) {
         while (true) {
-            mediaPlayerViewModel.updateProgress(){}
+            mediaPlayerService.updateProgress() {}
             delay(1000) // Update progress every second (adjust as needed)
         }
     }
@@ -94,7 +83,7 @@ fun SongsScreen(
         modifier = Modifier.background(MaterialTheme.colorScheme.primary)
     ) {
 
-        if (mediaPlayerViewModel.audioList.value.isEmpty()) {
+        if (mediaPlayerService.audioList.value.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -109,38 +98,38 @@ fun SongsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LazyColumn(modifier = Modifier.weight(1f)) {
-                if (mediaPlayerViewModel.searchedMusic.value.isEmpty()) {
-                    itemsIndexed(mediaPlayerViewModel.audioList.value) { position, audioData ->
+                if (mediaPlayerService.searchedMusic.value.isEmpty()) {
+                    itemsIndexed(mediaPlayerService.audioList.value) { position, audioData ->
                         MusicItem(audioData = audioData, context = context, onItemClick = {
-                            mediaPlayerViewModel.isPlaying.value = false
-                            mediaPlayerViewModel.manuallyPaused.value = false
-                            mediaPlayerViewModel.selectedAudioFile?.value = it
-                            mediaPlayerViewModel.currentMusicPosition.value = position
-                            itemClicked.value = true
+                            mediaPlayerService.isPlaying.value = false
+                            mediaPlayerService.manuallyPaused.value = false
+                            mediaPlayerService.selectedAudioFile?.value = it
+                            mediaPlayerService.currentMusicPosition.value = position
+                            mediaPlayerService.itemClicked.value = true
                         })
                     }
                 } else {
                     val filteredMusicList = ArrayList<AudioData>()
-                    for (audio in mediaPlayerViewModel.audioList.value) {
+                    for (audio in mediaPlayerService.audioList.value) {
                         if (audio.title.lowercase()
-                                .contains(mediaPlayerViewModel.searchedMusic.value.lowercase())
+                                .contains(mediaPlayerService.searchedMusic.value.lowercase())
                         ) {
                             filteredMusicList.add(audio)
                         }
                     }
                     itemsIndexed(filteredMusicList) { position, audioData ->
                         MusicItem(audioData = audioData, context = context, onItemClick = {
-                            mediaPlayerViewModel.isPlaying.value = false
-                            mediaPlayerViewModel.manuallyPaused.value = false
-                            mediaPlayerViewModel.selectedAudioFile?.value = it
-                            mediaPlayerViewModel.currentMusicPosition.value = position
-                            itemClicked.value = true
+                            mediaPlayerService.isPlaying.value = false
+                            mediaPlayerService.manuallyPaused.value = false
+                            mediaPlayerService.selectedAudioFile?.value = it
+                            mediaPlayerService.currentMusicPosition.value = position
+                            mediaPlayerService.itemClicked.value = true
                         })
                     }
                 }
             }
             AnimatedVisibility(
-                visible = itemClicked.value,
+                visible = mediaPlayerService.itemClicked.value,
                 modifier = Modifier.background(Color.White)
             ) {
                 Card(
@@ -156,9 +145,9 @@ fun SongsScreen(
                 ) {
                     Row(modifier = Modifier.padding(10.dp)) {
                         Image(
-                            painter = if (mediaPlayerViewModel.selectedAudioFile?.value?.albumData != null) getImagePainter(
+                            painter = if (mediaPlayerService.selectedAudioFile?.value?.albumData != null) getImagePainter(
                                 context = context,
-                                bitMap = mediaPlayerViewModel.selectedAudioFile?.value?.albumData
+                                bitMap = mediaPlayerService.selectedAudioFile?.value?.albumData
                             ) else {
                                 painterResource(id = R.drawable.music)
                             },
@@ -175,28 +164,28 @@ fun SongsScreen(
                         ) {
                             //Song Name Details
                             Text(
-                                text = mediaPlayerViewModel.selectedAudioFile?.value?.title
+                                text = mediaPlayerService.selectedAudioFile?.value?.title
                                     ?: "",
                                 color = Color.White,
                                 modifier = Modifier.basicMarquee()
                             )
                             Text(
-                                text = mediaPlayerViewModel.selectedAudioFile?.value?.artist
+                                text = mediaPlayerService.selectedAudioFile?.value?.artist
                                     ?: "",
                                 color = Color.White
                             )
                         }
                         IconButton(onClick = {
-                            if (mediaPlayerViewModel.mediaPlayer?.isPlaying == true) {
-                                mediaPlayerViewModel.manuallyPaused.value = true
-                                mediaPlayerViewModel.pauseMusic()
+                            if (mediaPlayerService.mPlayer?.isPlaying == true) {
+                                mediaPlayerService.manuallyPaused.value = true
+                                mediaPlayerService.pause()
                             } else {
-                                mediaPlayerViewModel.playMusic()
+                                mediaPlayerService.play()
                             }
                         }) {
                             Icon(
                                 painter = painterResource(
-                                    id = if (mediaPlayerViewModel.isPlaying.value) {
+                                    id = if (mediaPlayerService.isPlaying.value && !mediaPlayerService.manuallyPaused.value) {
                                         R.drawable.pause
                                     } else R.drawable.play_button
                                 ),

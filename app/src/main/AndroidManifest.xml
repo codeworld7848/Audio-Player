@@ -5,6 +5,10 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -19,10 +23,11 @@
             android:name=".AudioPlayerActivity"
             android:exported="true"
             android:label="@string/title_activity_audio_player"
-            android:theme="@style/Theme.MyAudioPlayer" >
+            android:theme="@style/Theme.MyAudioPlayer">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:scheme="file" />
                 <data android:scheme="content" />
                 <data android:mimeType="*/*" />
@@ -33,6 +38,7 @@
         </activity>
         <activity
             android:name=".MainActivity"
+            android:launchMode="singleTop"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.MyAudioPlayer">
@@ -44,6 +50,10 @@
             </intent-filter>
 
         </activity>
+
+        <service
+            android:name=".MediaPlayerService"
+            android:exported="false" />
     </application>
 
 </manifest>

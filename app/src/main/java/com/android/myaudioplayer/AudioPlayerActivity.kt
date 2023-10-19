@@ -1,11 +1,15 @@
 package com.android.myaudioplayer
 
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
+import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -60,10 +64,20 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 class AudioPlayerActivity : ComponentActivity() {
-    @OptIn(ExperimentalFoundationApi::class)
     val mediaPlayerViewModel: MediaPlayerViewModel by viewModels()
+    var mediaPlayerService: MediaPlayerService? = null
+    var mBound = false
+    val mServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, iBinder: IBinder?) {
+            val mServiceBinder = iBinder as MediaPlayerService.MyMusicServiceBinder
+            mediaPlayerService = mServiceBinder.getService()
+            mBound = true
+        }
+        override fun onServiceDisconnected(name: ComponentName?) {
+            mBound = false
+        }
+    }
 
-    @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -73,11 +87,15 @@ class AudioPlayerActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Color.Transparent
                 ) {
+                    val intent = Intent(this, MediaPlayerService::class.java)
+                    bindService(intent, mServiceConnection, BIND_AUTO_CREATE)
                     val context = LocalContext.current
+//                    val context = LocalContext.current
                     LaunchedEffect(key1 = true) {
                         val uri = intent.data
                         if (uri != null) {
-                            mediaPlayerViewModel.selectedAudioFile?.value = extractAudioInfo(uri = uri)
+                            mediaPlayerViewModel.selectedAudioFile?.value =
+                                extractAudioInfo(uri = uri)
                         }
                     }
                     val selectedSong = mediaPlayerViewModel.selectedAudioFile?.value
@@ -88,14 +106,17 @@ class AudioPlayerActivity : ComponentActivity() {
                                     it.stop()
                                     it.release()
                                     selectedSong?.uri?.let { uri ->
-                                        mediaPlayerViewModel.mediaPlayer = MediaPlayer.create(context, uri)
+                                        mediaPlayerViewModel.mediaPlayer =
+                                            MediaPlayer.create(context, uri)
                                         mediaPlayerViewModel.playMusic()
                                     }
                                 }
                             } else {
                                 selectedSong?.uri?.let { uri ->
-                                    mediaPlayerViewModel.mediaPlayer = MediaPlayer.create(context, uri)
-                                    mediaPlayerViewModel.duration.value = mediaPlayerViewModel.getDuration()
+                                    mediaPlayerViewModel.mediaPlayer =
+                                        MediaPlayer.create(context, uri)
+                                    mediaPlayerViewModel.duration.value =
+                                        mediaPlayerViewModel.getDuration()
                                     mediaPlayerViewModel.playMusic()
                                 }
                             }
@@ -104,8 +125,9 @@ class AudioPlayerActivity : ComponentActivity() {
                     // Observe playback progress and update the slider
                     LaunchedEffect(mediaPlayerViewModel) {
                         while (true) {
-                            mediaPlayerViewModel. currentPosition.value = mediaPlayerViewModel.getCurrentPosition()
-                            mediaPlayerViewModel.updateProgress(){}
+                            mediaPlayerViewModel.currentPosition.value =
+                                mediaPlayerViewModel.getCurrentPosition()
+                            mediaPlayerViewModel.updateProgress() {}
                             delay(1000) // Update progress every second (adjust as needed)
                         }
                     }
@@ -129,7 +151,12 @@ class AudioPlayerActivity : ComponentActivity() {
                                 animationSpec = tween(durationMillis = 300)
                             )
                         ) {
-                            AudioPlayingCard(mediaPlayerViewModel.selectedAudioFile, context, mediaPlayerViewModel. currentPosition.value, mediaPlayerViewModel. duration.value)
+                            AudioPlayingCard(
+                                mediaPlayerViewModel.selectedAudioFile,
+                                context,
+                                mediaPlayerViewModel.currentPosition.value,
+                                mediaPlayerViewModel.duration.value
+                            )
                         }
                     }
                 }

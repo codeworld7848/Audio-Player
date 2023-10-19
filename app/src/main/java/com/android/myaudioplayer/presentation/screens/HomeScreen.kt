@@ -1,5 +1,6 @@
 package com.android.myaudioplayer.presentation.screens
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
@@ -57,6 +58,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.android.myaudioplayer.MainActivity
 import com.android.myaudioplayer.MediaPlayerViewModel
 import com.android.myaudioplayer.presentation.Constants
 import com.android.myaudioplayer.presentation.components.CustomTopBar
@@ -90,7 +92,6 @@ fun HomeScreen(navController: NavController, mediaPlayerViewModel: MediaPlayerVi
             )
         }
     }
-
 }
 
 @OptIn(ExperimentalPagerApi::class)
@@ -101,15 +102,17 @@ fun TabsContent(
     mediaPlayerViewModel: MediaPlayerViewModel
 ) {
     val context = LocalContext.current
+    val mediaService = (context as Activity as MainActivity)
+    val mediaPlayerService = mediaService.mediaPlayerService!!
     LaunchedEffect(key1 = true ){
-        if (mediaPlayerViewModel.audioList.value.isEmpty()) {
-            mediaPlayerViewModel.getSongsFromDevice(context)
+        if (mediaPlayerService.audioList.value.isEmpty()) {
+            mediaPlayerService.getSongsFromDevice(context)
         }
     }
 
     HorizontalPager(state = pagerState) { page ->
         when (page) {
-            0 -> SongsScreen(navController, mediaPlayerViewModel)
+            0 -> SongsScreen(navController)
             1 -> AlbumsScreen(mediaPlayerViewModel)
             2 -> AlbumsScreen(mediaPlayerViewModel)
             3 -> AlbumsScreen(mediaPlayerViewModel)
