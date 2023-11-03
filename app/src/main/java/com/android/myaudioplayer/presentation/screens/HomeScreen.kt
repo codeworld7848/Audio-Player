@@ -83,7 +83,7 @@ fun HomeScreen(navController: NavController, mediaPlayerViewModel: MediaPlayerVi
     }
     val context = LocalContext.current
     val mediaService = (context as Activity as MainActivity)
-    val mediaPlayerService = mediaService.mediaPlayerService!!
+    val mediaPlayerService = mediaPlayerViewModel.mediaPlayerService!!
     LaunchedEffect(key1 = true) {
         if (mediaPlayerService.audioList.value.isEmpty()) {
             mediaPlayerService.getSongsFromDevice(context)
@@ -96,7 +96,7 @@ fun HomeScreen(navController: NavController, mediaPlayerViewModel: MediaPlayerVi
 
     Scaffold(
         topBar = {
-            CustomTopBar(navController,searchIconClicked){
+            CustomTopBar(navController,searchIconClicked,mediaPlayerViewModel=mediaPlayerViewModel){
                 navController.navigate(Destinations.FAV_SCREEN_ROUTE){
                     launchSingleTop=true
                 }
@@ -104,7 +104,7 @@ fun HomeScreen(navController: NavController, mediaPlayerViewModel: MediaPlayerVi
         }
     ) {
         Column(modifier = Modifier.padding(top = it.calculateTopPadding())) {
-            SongsScreen(navController)
+            SongsScreen(navController,mediaPlayerViewModel)
         }
     }
 }
@@ -118,13 +118,13 @@ fun TabsContent(
 ) {
     val context = LocalContext.current
     val mediaService = (context as Activity as MainActivity)
-    val mediaPlayerService = mediaService.mediaPlayerService!!
+    val mediaPlayerService = mediaPlayerViewModel.mediaPlayerService!!
     LaunchedEffect(key1 = true) {
         if (mediaPlayerService.audioList.value.isEmpty()) {
             mediaPlayerService.getSongsFromDevice(context)
         }
     }
-    SongsScreen(navController)
+    SongsScreen(navController,mediaPlayerViewModel)
 
    /* HorizontalPager(state = pagerState) { page ->
         when (page) {

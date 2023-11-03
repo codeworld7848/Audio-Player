@@ -28,24 +28,24 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalAnimationApi::class)
     val mediaPlayerViewModel: MediaPlayerViewModel by viewModels()
-    var mediaPlayerService: MediaPlayerService? = null
-    var mBound = false
-    private lateinit var mServiceConnection: ServiceConnection
+//    var mediaPlayerService: MediaPlayerService? = null
+//    var mBound = false
+//    private lateinit var mServiceConnection: ServiceConnection
 
     @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            MyAudioPlayerTheme {
+            MyAudioPlayerTheme(darkTheme = true) {
                 // A surface container using the 'background' color from the theme
                 val bindDone = rememberSaveable {
                     mutableStateOf(false)
                 }
-                mServiceConnection = object : ServiceConnection {
+                mediaPlayerViewModel.mServiceConnection = object : ServiceConnection {
                     override fun onServiceConnected(name: ComponentName?, iBinder: IBinder?) {
                         val mServiceBinder = iBinder as MediaPlayerService.MyMusicServiceBinder
-                        mediaPlayerService = mServiceBinder.getService()
+                        mediaPlayerViewModel. mediaPlayerService = mServiceBinder.getService()
                         bindDone.value = true
                     }
 
@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 val serviceIntent = Intent(this, MediaPlayerService::class.java)
-                bindService(serviceIntent, mServiceConnection, BIND_AUTO_CREATE)
+                bindService(serviceIntent, mediaPlayerViewModel.mServiceConnection, BIND_AUTO_CREATE)
                 if (intent.action == "ACTION_OPEN_FROM_NOTIFICATION") {
                     Constants.Destination = Destinations.DETAILS_SCREEN_ROUTE
                     isOpenFromNotification = true
@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     if (bindDone.value) {
-                        mBound = true
+                        mediaPlayerViewModel.mBound = true
                         val navHostController = rememberNavController()
                         SetUpNavGraph(navController = navHostController, mediaPlayerViewModel)
                     }
@@ -77,16 +77,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        mediaPlayerService?.appOnBackGround?.value=false
+        mediaPlayerViewModel. mediaPlayerService?.appOnBackGround?.value=false
     }
 
     override fun onStop() {
         super.onStop()
-        mediaPlayerService?.appOnBackGround?.value=true
+        mediaPlayerViewModel.  mediaPlayerService?.appOnBackGround?.value=true
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        unbindService(mServiceConnection)
+//        unbindService(mServiceConnection)
     }
 }

@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.android.myaudioplayer.MainActivity
 import com.android.myaudioplayer.MediaPlayerService
+import com.android.myaudioplayer.MediaPlayerViewModel
 import com.android.myaudioplayer.R
 import com.android.myaudioplayer.presentation.Constants
 import com.android.myaudioplayer.presentation.components.CustomBottomBar
@@ -82,11 +83,12 @@ import java.util.Random
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun SongsScreen(
-    navController: NavController
+    navController: NavController,
+    mediaPlayerViewModel: MediaPlayerViewModel
 ) {
     val context = LocalContext.current
     val mediaService = (context as Activity as MainActivity)
-    val mediaPlayerService = mediaService.mediaPlayerService!!
+    val mediaPlayerService = mediaPlayerViewModel.mediaPlayerService!!
     LaunchedEffect(key1 = mediaPlayerService.selectedAudioFile?.value) {
         mediaPlayerService.selectedAudioFile?.value?.let { audioData ->
             if (!mediaPlayerService.isPlaying.value && !mediaPlayerService.manuallyPaused.value) {

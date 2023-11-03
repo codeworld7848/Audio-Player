@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.android.myaudioplayer.MainActivity
 import com.android.myaudioplayer.MediaPlayerService
+import com.android.myaudioplayer.MediaPlayerViewModel
 import com.android.myaudioplayer.R
 import com.android.myaudioplayer.presentation.Constants
 import com.android.myaudioplayer.presentation.components.CustomBottomBar
@@ -70,10 +71,10 @@ import java.util.Random
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun FavMusicScreen(navController: NavController) {
+fun FavMusicScreen(navController: NavController,mediaPlayerViewModel: MediaPlayerViewModel) {
     val context = LocalContext.current
     val mediaService = (context as Activity as MainActivity)
-    val mediaPlayerService = mediaService.mediaPlayerService!!
+    val mediaPlayerService = mediaPlayerViewModel.mediaPlayerService!!
     LaunchedEffect(key1 = mediaPlayerService.selectedAudioFile?.value) {
         mediaPlayerService.selectedAudioFile?.value?.let { audioData ->
             if (!mediaPlayerService.isPlaying.value && !mediaPlayerService.manuallyPaused.value) {
@@ -132,7 +133,7 @@ fun FavMusicScreen(navController: NavController) {
     ) {*/
         Scaffold(
             topBar = {
-                CustomTopBar(navController,searchIconClicked) {
+                CustomTopBar(navController,searchIconClicked,mediaPlayerViewModel) {
                     navController.navigate(Destinations.FAV_SCREEN_ROUTE) {
                         launchSingleTop = true
                     }

@@ -38,11 +38,12 @@ import com.android.myaudioplayer.presentation.navigation.Destinations
 fun CustomTopBar(
     navController: NavController,
     searchIconClicked: MutableState<Boolean>,
+    mediaPlayerViewModel: MediaPlayerViewModel,
     favIconClicked: () -> Unit
 ) {
     val context = LocalContext.current
-    val mediaService = (context as Activity as MainActivity)
-    val mediaPlayerService = mediaService.mediaPlayerService!!
+//    val mediaService = (context as Activity as MainActivity)
+    val mediaPlayerService = mediaPlayerViewModel.mediaPlayerService!!
     Row(
         modifier = Modifier
             .fillMaxWidth()

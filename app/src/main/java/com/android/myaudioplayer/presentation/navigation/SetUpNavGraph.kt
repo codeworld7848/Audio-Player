@@ -71,7 +71,7 @@ fun SetUpNavGraph(
                 )
             }
         ) {
-            MusicDetailsScreen()
+            MusicDetailsScreen(mediaPlayerViewModel)
         }
         composable(
             route = Destinations.FAV_SCREEN_ROUTE,
@@ -88,7 +88,7 @@ fun SetUpNavGraph(
                 )
             }
         ) {
-            FavMusicScreen(navController)
+            FavMusicScreen(navController,mediaPlayerViewModel)
         }
     }
 }

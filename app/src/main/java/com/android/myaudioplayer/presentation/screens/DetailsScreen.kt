@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import com.android.myaudioplayer.MainActivity
+import com.android.myaudioplayer.MediaPlayerViewModel
 import com.android.myaudioplayer.R
 import com.android.myaudioplayer.presentation.components.getImagePainter
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -66,10 +67,10 @@ import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalPagerApi::class, ExperimentalStdlibApi::class)
 @Composable
-fun MusicDetailsScreen() {
+fun MusicDetailsScreen(mediaPlayerViewModel:MediaPlayerViewModel) {
     val context = LocalContext.current
     val mediaService = (context as Activity as MainActivity)
-    val mediaPlayerService = mediaService.mediaPlayerService!!
+    val mediaPlayerService = mediaPlayerViewModel.mediaPlayerService!!
     // Display current position and total duration
     val currentPosition = mediaPlayerService.getCurrentPosition()
     val duration = mediaPlayerService.getDuration()
