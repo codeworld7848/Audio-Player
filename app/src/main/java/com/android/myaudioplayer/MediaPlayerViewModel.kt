@@ -25,7 +25,7 @@ class MediaPlayerViewModel : ViewModel() {
     val currentPosition = mutableStateOf("")
     val duration = mutableStateOf("")
 
-    fun getSongsFromDevice(
+/*    fun getSongsFromDevice(
         context: Context
     ) {
         viewModelScope.launch {
@@ -72,7 +72,7 @@ class MediaPlayerViewModel : ViewModel() {
                 audioList.value = tempList
             }
         }
-    }
+    }*/
 
 
     fun playMusic() {

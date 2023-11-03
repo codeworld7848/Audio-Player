@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.MediaStore
+import android.window.SplashScreen
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
@@ -58,11 +59,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImagePainter
 import com.android.myaudioplayer.MainActivity
 import com.android.myaudioplayer.MediaPlayerViewModel
 import com.android.myaudioplayer.presentation.Constants
 import com.android.myaudioplayer.presentation.components.CustomTopBar
 import com.android.myaudioplayer.presentation.components.getAlbumArt
+import com.android.myaudioplayer.presentation.navigation.Destinations
+import com.android.myaudioplayer.utils.Utils
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
@@ -77,19 +81,30 @@ fun HomeScreen(navController: NavController, mediaPlayerViewModel: MediaPlayerVi
     val searchIconClicked = remember {
         mutableStateOf(false)
     }
+    val context = LocalContext.current
+    val mediaService = (context as Activity as MainActivity)
+    val mediaPlayerService = mediaService.mediaPlayerService!!
+    LaunchedEffect(key1 = true) {
+        if (mediaPlayerService.audioList.value.isEmpty()) {
+            mediaPlayerService.getSongsFromDevice(context)
+        }
+    }
+    //Get the fav music list
+    LaunchedEffect(key1 = true) {
+        Constants.favAudioList.value = Utils.getFavPreference(context)
+    }
+
     Scaffold(
         topBar = {
-            CustomTopBar(searchIconClicked, mediaPlayerViewModel)
+            CustomTopBar(navController,searchIconClicked){
+                navController.navigate(Destinations.FAV_SCREEN_ROUTE){
+                    launchSingleTop=true
+                }
+            }
         }
     ) {
         Column(modifier = Modifier.padding(top = it.calculateTopPadding())) {
-            AnimatedVisibility(visible = !searchIconClicked.value) {
-                Tabs(pagerState = pagerState)
-            }
-            TabsContent(
-                pagerState = pagerState, navController = navController,
-                mediaPlayerViewModel
-            )
+            SongsScreen(navController)
         }
     }
 }
@@ -104,20 +119,21 @@ fun TabsContent(
     val context = LocalContext.current
     val mediaService = (context as Activity as MainActivity)
     val mediaPlayerService = mediaService.mediaPlayerService!!
-    LaunchedEffect(key1 = true ){
+    LaunchedEffect(key1 = true) {
         if (mediaPlayerService.audioList.value.isEmpty()) {
             mediaPlayerService.getSongsFromDevice(context)
         }
     }
+    SongsScreen(navController)
 
-    HorizontalPager(state = pagerState) { page ->
+   /* HorizontalPager(state = pagerState) { page ->
         when (page) {
             0 -> SongsScreen(navController)
             1 -> AlbumsScreen(mediaPlayerViewModel)
             2 -> AlbumsScreen(mediaPlayerViewModel)
             3 -> AlbumsScreen(mediaPlayerViewModel)
         }
-    }
+    }*/
 }
 
 @OptIn(ExperimentalPagerApi::class)
@@ -176,7 +192,18 @@ data class AudioData(
     val artist: String,
     val album: String,
     val duration: String,
-    val uri: Uri,
-    val albumData: Bitmap?
+    val uri: String,
+    val albumData: String?
 )
+
+data class AudioDataNew(
+    val path: String,
+    val title: String,
+    val artist: String,
+    val album: String,
+    val duration: String,
+    val uri: Uri,
+    val albumData: AsyncImagePainter?
+)
+
 

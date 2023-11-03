@@ -94,8 +94,8 @@ class AudioPlayerActivity : ComponentActivity() {
                     LaunchedEffect(key1 = true) {
                         val uri = intent.data
                         if (uri != null) {
-                            mediaPlayerViewModel.selectedAudioFile?.value =
-                                extractAudioInfo(uri = uri)
+//                            mediaPlayerViewModel.selectedAudioFile?.value =
+//                                extractAudioInfo(uri = uri)
                         }
                     }
                     val selectedSong = mediaPlayerViewModel.selectedAudioFile?.value
@@ -105,14 +105,16 @@ class AudioPlayerActivity : ComponentActivity() {
                                 mediaPlayerViewModel.mediaPlayer?.let {
                                     it.stop()
                                     it.release()
-                                    selectedSong?.uri?.let { uri ->
+                                    selectedSong?.uri?.let { uriString ->
+                                        val uri = Uri.parse(uriString)
                                         mediaPlayerViewModel.mediaPlayer =
                                             MediaPlayer.create(context, uri)
                                         mediaPlayerViewModel.playMusic()
                                     }
                                 }
                             } else {
-                                selectedSong?.uri?.let { uri ->
+                                selectedSong?.uri?.let {uriString ->
+                                    val uri = Uri.parse(uriString)
                                     mediaPlayerViewModel.mediaPlayer =
                                         MediaPlayer.create(context, uri)
                                     mediaPlayerViewModel.duration.value =
@@ -303,6 +305,7 @@ class AudioPlayerActivity : ComponentActivity() {
         }
     }
 
+/*
     private suspend fun extractAudioInfo(uri: Uri): AudioData? {
         val retriever = MediaMetadataRetriever()
 
@@ -341,5 +344,6 @@ class AudioPlayerActivity : ComponentActivity() {
         // Return default values if extraction fails
         return null
     }
+*/
 }
 

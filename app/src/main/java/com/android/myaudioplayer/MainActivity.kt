@@ -1,23 +1,23 @@
 package com.android.myaudioplayer
 
-import android.app.ActivityManager
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.rememberNavController
 import com.android.myaudioplayer.presentation.Constants
 import com.android.myaudioplayer.presentation.Constants.isOpenFromNotification
 import com.android.myaudioplayer.presentation.navigation.Destinations
@@ -67,12 +67,22 @@ class MainActivity : ComponentActivity() {
                 ) {
                     if (bindDone.value) {
                         mBound = true
-                        val navHostController = rememberAnimatedNavController()
+                        val navHostController = rememberNavController()
                         SetUpNavGraph(navController = navHostController, mediaPlayerViewModel)
                     }
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mediaPlayerService?.appOnBackGround?.value=false
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mediaPlayerService?.appOnBackGround?.value=true
     }
 
     override fun onDestroy() {
