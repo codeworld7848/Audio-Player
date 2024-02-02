@@ -44,6 +44,21 @@ object Utils {
         editor.apply()
     }
 
+    fun removeFromFavPreference(context: Context, songList: ArrayList<AudioData>) {
+        val favPlayList: ArrayList<AudioData> = getFavPreference(context)
+        songList.forEach { audioData ->
+            if (favPlayList.contains(audioData)) {
+                favPlayList.remove(audioData)
+            }
+        }
+        val sharedPreferences = context.getSharedPreferences("my_music", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        val gson = Gson() // You can use any JSON library of your choice
+        val favSongListJson: String = gson.toJson(favPlayList)
+        editor.putString("my_fav_songs", favSongListJson)
+        editor.apply()
+    }
+
     fun getFavPreference(context: Context): ArrayList<AudioData> {
         val sharedPreferences = context.getSharedPreferences("my_music", Context.MODE_PRIVATE)
         try {
@@ -65,7 +80,7 @@ object Utils {
     fun addRecentPlayedPreference(context: Context, audioData: AudioData) {
         val recentPlayerList: ArrayList<AudioData> = getRecentPlayedPreference(context)
         if (recentPlayerList.size < 20) {
-            if(recentPlayerList.contains(audioData)){
+            if (recentPlayerList.contains(audioData)) {
                 recentPlayerList.remove(audioData)
             }
             recentPlayerList.add(0, audioData)

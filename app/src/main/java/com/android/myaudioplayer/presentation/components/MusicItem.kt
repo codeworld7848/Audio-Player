@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import coil.compose.AsyncImage
 import com.android.myaudioplayer.R
 import com.android.myaudioplayer.presentation.screens.AudioData
 import kotlinx.coroutines.Dispatchers
@@ -95,15 +96,9 @@ fun MusicItem(
                 .wrapContentHeight()
                 .padding(5.dp)
         ) {
-            Image(
-                painter = if (audioData.albumData != null) getImagePainter(
-                    context = context,
-                    bitMap = audioData.albumData
-                )
-                else {
-                    painterResource(id = R.drawable.music)
-                },
-                contentDescription = "",
+            AsyncImage(
+                model = audioData.albumData, contentDescription = "",
+                placeholder = painterResource(id = R.drawable.music),
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape),
@@ -118,18 +113,6 @@ fun MusicItem(
             )
         }
     }
-}
-
-suspend fun getAlbumArt(uri: String): Bitmap? {
-    val retriever = MediaMetadataRetriever()
-    retriever.setDataSource(uri)
-    val art = withContext(Dispatchers.IO) {
-        retriever.embeddedPicture?.let { bytes ->
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-        }
-    }
-    retriever.release()
-    return art
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -183,22 +166,17 @@ fun FavMusicItem(
                 .wrapContentHeight()
                 .padding(5.dp)
         ) {
-            Image(
-                painter = if (audioData.albumData != null) getImagePainter(
-                    context = context,
-                    bitMap = audioData.albumData
-                )
-                else {
-                    painterResource(id = R.drawable.music)
-                },
-                contentDescription = "",
+            AsyncImage(
+                model = audioData.albumData, contentDescription = "",
+                placeholder = painterResource(id = R.drawable.music),
                 modifier = Modifier
                     .size(130.dp)
                     .clip(RoundedCornerShape(10.dp)),
                 contentScale = ContentScale.FillBounds
             )
             Text(
-                modifier = Modifier.padding(horizontal = 5.dp)
+                modifier = Modifier
+                    .padding(horizontal = 5.dp)
                     .basicMarquee(
                         iterations = Int.MAX_VALUE
                     ),

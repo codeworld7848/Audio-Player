@@ -18,21 +18,15 @@ import android.os.Handler
 import android.os.IBinder
 import android.provider.MediaStore
 import android.util.Log
-import android.widget.ProgressBar
 import android.widget.RemoteViews
-import android.widget.Toast
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
 import com.android.myaudioplayer.presentation.Constants
-import com.android.myaudioplayer.presentation.components.getAlbumArt
 import com.android.myaudioplayer.presentation.screens.AudioData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.lang.IllegalStateException
-import kotlin.math.roundToInt
 
 
 class MediaPlayerService : Service() {
@@ -90,13 +84,18 @@ class MediaPlayerService : Service() {
                     }
 
                     "ACTION_PLAY" -> {
-                        // Handle the action to start the service
-                        val songUri = intent.data // Get the song from the screen
-                        val albumBitmap = intent.getStringExtra("albumImage")
-                        songUri?.let {
-                            setMediaUri(it)
-                            play()
+                        try {
+                            // Handle the action to start the service
+                            val songUri = intent.data // Get the song from the screen
+                            val albumBitmap = intent.getStringExtra("albumImage")
+                            songUri?.let {
+                                setMediaUri(it)
+                                play()
+                            }
+                        } catch (e: IllegalStateException) {
+                            e.printStackTrace()
                         }
+
                     }
 
                     "ACTION_RESUMED" -> {
@@ -336,7 +335,13 @@ class MediaPlayerService : Service() {
 
 
     fun getCurrentPosition(): String {
-        return formatDuration(mPlayer?.currentPosition ?: 0)
+        return try {
+            formatDuration(mPlayer?.currentPosition ?: 0)
+        } catch (e: Exception) {
+            // Handle exceptions here
+            e.printStackTrace() // You can log the exception for debugging purposes
+            "00:00" // Return a default value or handle the exception as needed
+        }
     }
 
     private fun formatDuration(currentPosition: Int): String {
@@ -371,15 +376,26 @@ class MediaPlayerService : Service() {
     }
 
     fun getDuration(): String {
-        return formatTotalDuration(mPlayer?.duration ?: 0)
+        return try {
+            formatTotalDuration(mPlayer?.duration ?: 0)
+        } catch (e: Exception) {
+            // Handle exceptions here
+            e.printStackTrace() // You can log the exception for debugging purposes
+            "00:00" // Return a default value or handle the exception as needed
+        }
     }
 
 
     fun play() {
-        mPlayer?.start()
-        isPlaying.value = true
-        manuallyPaused.value = false
-        generateForegroundNotification() // Update the notification
+        try {
+            mPlayer?.start()
+            isPlaying.value = true
+            manuallyPaused.value = false
+            generateForegroundNotification() // Update the notification
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
     }
 
     fun updateProgress(playNextOnComplete: () -> Unit) {
@@ -424,29 +440,42 @@ class MediaPlayerService : Service() {
     }
 
     fun seekToPosition(position: Int) {
-            mPlayer?.seekTo(position)
-            this@MediaPlayerService.mPlayer?.let {
-                currentPosition.value =
-                    formatDuration(mPlayer?.currentPosition ?: 0)
-                progress.value = (it.currentPosition.toFloat() / it.duration.toFloat())
-            }
+        mPlayer?.seekTo(position)
+        this@MediaPlayerService.mPlayer?.let {
+            currentPosition.value =
+                formatDuration(mPlayer?.currentPosition ?: 0)
+            progress.value = (it.currentPosition.toFloat() / it.duration.toFloat())
+        }
     }
 
     fun pause() {
-        mPlayer?.pause()
-        isPlaying.value = false
-        generateForegroundNotification() // Update the notification
+        try {
+            mPlayer?.pause()
+            isPlaying.value = false
+            generateForegroundNotification() // Update the notification
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun setMediaUri(uri: Uri) {
-        mPlayer = MediaPlayer.create(applicationContext, uri)
+        try {
+            mPlayer = MediaPlayer.create(applicationContext, uri)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun stopPlaying() {
-        mPlayer?.let {
-            it.stop()
-            it.release()
+        try {
+            mPlayer?.let {
+                it.stop()
+                it.release()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
+
     }
 
     fun getSongsFromDevice(
@@ -483,7 +512,7 @@ class MediaPlayerService : Service() {
                 while (cursor.moveToNext()) {
                     val album = cursor.getString(albumColumn)
                     val title = cursor.getString(titleColumn)
-                    val duration = cursor.getString(durationColumn)
+                    val duration = cursor.getString(durationColumn) ?: ""
                     val path = cursor.getString(pathColumn)
                     val artist = cursor.getString(artistColumn)
                     val id = cursor.getLong(idColumn)
@@ -492,11 +521,18 @@ class MediaPlayerService : Service() {
                         .buildUpon()
                         .appendPath(id.toString())
                         .build()
-//                    val albumData = getAlbumArt(path)
                     val artUri = Uri.parse("content://media/external/audio/albumart")
                     val albumArtUri = Uri.withAppendedPath(artUri, albumIdc).toString()
                     tempList.add(
-                        AudioData(path, title, artist, album, duration, contentUri.toString(), albumArtUri)
+                        AudioData(
+                            path,
+                            title,
+                            artist,
+                            album,
+                            duration,
+                            contentUri.toString(),
+                            albumArtUri
+                        )
                     )
                 }
                 audioList.value = tempList

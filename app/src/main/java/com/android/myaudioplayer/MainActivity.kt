@@ -1,8 +1,10 @@
 package com.android.myaudioplayer
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -26,15 +28,31 @@ import com.android.myaudioplayer.ui.theme.MyAudioPlayerTheme
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalAnimationApi::class)
     val mediaPlayerViewModel: MediaPlayerViewModel by viewModels()
-//    var mediaPlayerService: MediaPlayerService? = null
-//    var mBound = false
-//    private lateinit var mServiceConnection: ServiceConnection
+    private val permissionGranted= mutableStateOf(false)
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val permissionList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(
+                Manifest.permission.READ_MEDIA_IMAGES,
+                Manifest.permission.READ_MEDIA_AUDIO,
+                Manifest.permission.READ_MEDIA_VIDEO,
+                Manifest.permission.ACCESS_NOTIFICATION_POLICY,
+                Manifest.permission.POST_NOTIFICATIONS,
+                Manifest.permission.FOREGROUND_SERVICE
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.ACCESS_NOTIFICATION_POLICY
+            )
+        }
+        requestPermissions(
+            permissionList,
+            100
+        )
 
         setContent {
             MyAudioPlayerTheme(darkTheme = true) {
@@ -45,7 +63,7 @@ class MainActivity : ComponentActivity() {
                 mediaPlayerViewModel.mServiceConnection = object : ServiceConnection {
                     override fun onServiceConnected(name: ComponentName?, iBinder: IBinder?) {
                         val mServiceBinder = iBinder as MediaPlayerService.MyMusicServiceBinder
-                        mediaPlayerViewModel. mediaPlayerService = mServiceBinder.getService()
+                        mediaPlayerViewModel.mediaPlayerService = mServiceBinder.getService()
                         bindDone.value = true
                     }
 
@@ -54,7 +72,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 val serviceIntent = Intent(this, MediaPlayerService::class.java)
-                bindService(serviceIntent, mediaPlayerViewModel.mServiceConnection, BIND_AUTO_CREATE)
+                bindService(
+                    serviceIntent,
+                    mediaPlayerViewModel.mServiceConnection,
+                    BIND_AUTO_CREATE
+                )
                 if (intent.action == "ACTION_OPEN_FROM_NOTIFICATION") {
                     Constants.Destination = Destinations.DETAILS_SCREEN_ROUTE
                     isOpenFromNotification = true
@@ -65,7 +87,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    if (bindDone.value) {
+                    if (bindDone.value && permissionGranted.value) {
                         mediaPlayerViewModel.mBound = true
                         val navHostController = rememberNavController()
                         SetUpNavGraph(navController = navHostController, mediaPlayerViewModel)
@@ -77,16 +99,21 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        mediaPlayerViewModel. mediaPlayerService?.appOnBackGround?.value=false
+        mediaPlayerViewModel.mediaPlayerService?.appOnBackGround?.value = false
     }
 
     override fun onStop() {
         super.onStop()
-        mediaPlayerViewModel.  mediaPlayerService?.appOnBackGround?.value=true
+        mediaPlayerViewModel.mediaPlayerService?.appOnBackGround?.value = true
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-//        unbindService(mServiceConnection)
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        permissionGranted.value=true
     }
+
 }

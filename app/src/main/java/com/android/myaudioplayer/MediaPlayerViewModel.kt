@@ -8,8 +8,6 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.android.myaudioplayer.presentation.components.getAlbumArt
 import com.android.myaudioplayer.presentation.screens.AudioData
 import kotlinx.coroutines.launch
 
@@ -18,66 +16,14 @@ class MediaPlayerViewModel : ViewModel() {
     var manuallyPaused = mutableStateOf(false)
     var isPlaying = mutableStateOf(false)
     var progress = mutableStateOf(0f)
-    private var tempList: ArrayList<AudioData> = arrayListOf()
     var audioList: MutableState<List<AudioData>> = mutableStateOf(emptyList())
     var selectedAudioFile: MutableState<AudioData?>? = mutableStateOf(null)
     var currentMusicPosition: MutableState<Int> = mutableStateOf(-1)
-    val searchedMusic = mutableStateOf("")
     val currentPosition = mutableStateOf("")
     val duration = mutableStateOf("")
     var mediaPlayerService: MediaPlayerService? = null
     var mBound = false
-     lateinit var mServiceConnection: ServiceConnection
-
-    /*    fun getSongsFromDevice(
-            context: Context
-        ) {
-            viewModelScope.launch {
-                val projection = arrayOf(
-                    MediaStore.Audio.Media.ALBUM,
-                    MediaStore.Audio.Media.TITLE,
-                    MediaStore.Audio.Media.DURATION,
-                    MediaStore.Audio.Media.DATA,  //For path
-                    MediaStore.Audio.Media.ARTIST,
-                    MediaStore.Audio.Media._ID
-                )
-                val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
-                val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
-                val cursor = context.contentResolver.query(
-                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                    projection,
-                    selection,
-                    null,
-                    sortOrder
-                )
-                cursor?.use {
-                    val albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
-                    val titleColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
-                    val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-                    val pathColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
-                    val artistColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
-                    val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-                    while (cursor.moveToNext()) {
-                        val album = cursor.getString(albumColumn)
-                        val title = cursor.getString(titleColumn)
-                        val duration = cursor.getString(durationColumn)
-                        val path = cursor.getString(pathColumn)
-                        val artist = cursor.getString(artistColumn)
-                        val id = cursor.getLong(idColumn)
-                        val contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                            .buildUpon()
-                            .appendPath(id.toString())
-                            .build()
-                        val albumData = getAlbumArt(path)
-                        tempList.add(
-                            AudioData(path, title, artist, album, duration, contentUri, albumData)
-                        )
-                    }
-                    audioList.value = tempList
-                }
-            }
-        }*/
-
+    lateinit var mServiceConnection: ServiceConnection
 
     fun playMusic() {
         // Implement code to start playing music
@@ -108,7 +54,7 @@ class MediaPlayerViewModel : ViewModel() {
                 isPlaying.value = false
                 manuallyPaused.value = false
                 playNextOnComplete()
-            }else{
+            } else {
                 manuallyPaused.value = true
                 pauseMusic()
             }

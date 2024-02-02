@@ -4,8 +4,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.graphics.BitmapFactory
-import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
@@ -18,7 +16,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,8 +41,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -56,12 +51,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.android.myaudioplayer.presentation.components.getImagePainter
+import coil.compose.AsyncImage
 import com.android.myaudioplayer.presentation.screens.AudioData
 import com.android.myaudioplayer.ui.theme.MyAudioPlayerTheme
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 
 class AudioPlayerActivity : ComponentActivity() {
     val mediaPlayerViewModel: MediaPlayerViewModel by viewModels()
@@ -179,15 +172,12 @@ class AudioPlayerActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
+                AsyncImage(
+                    model = audioData.value?.albumData, contentDescription = "",
+                    placeholder = painterResource(id = R.drawable.music),
                     modifier = Modifier
                         .fillMaxSize()
                         .blur(50.dp),
-                    painter = getImagePainter(
-                        context = context,
-                        bitMap = audioData.value?.albumData
-                    ),
-                    contentDescription = "",
                     contentScale = ContentScale.FillBounds
                 )
                 Card(
@@ -203,11 +193,9 @@ class AudioPlayerActivity : ComponentActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(20.dp)
                     ) {
-                        Image(
-                            painter = getImagePainter(
-                                context = context,
-                                bitMap = audioData.value?.albumData
-                            ), contentDescription = "",
+                        AsyncImage(
+                            model = audioData.value?.albumData, contentDescription = "",
+                            placeholder = painterResource(id = R.drawable.music),
                             modifier = Modifier
                                 .clip(RoundedCornerShape(20.dp))
                                 .shadow(10.dp)
